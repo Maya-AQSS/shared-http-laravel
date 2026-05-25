@@ -1,14 +1,13 @@
 {
-    "name": "maya/shared-http-laravel",
-    "description": "Shared HTTP utilities for MAyA Laravel microservices: response envelope, health checks, base resources.",
+    "name": "ceedcv-maya/shared-http-laravel",
+    "description": "Reusable HTTP utilities for Laravel APIs: standardized JSON response envelope, health endpoint, app metadata controller, exception handler.",
     "type": "library",
     "license": "MIT",
     "homepage": "https://github.com/Maya-AQSS/shared-http-laravel",
     "support": {
-        "issues": "https://github.com/Maya-AQSS/shared-http-laravel/issues",
+        "issues": "https://github.com/Maya-AQSS/maya_platform/issues",
         "source": "https://github.com/Maya-AQSS/shared-http-laravel"
     },
-    "version": "0.1.0",
     "require": {
         "php": "^8.4",
         "illuminate/http": "^11.0 || ^12.0 || ^13.0",
@@ -22,5 +21,21 @@
         }
     },
     "minimum-stability": "stable",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "keywords": [
+        "laravel",
+        "http",
+        "api",
+        "health",
+        "response",
+        "ceedcv",
+        "maya"
+    ],
+    "authors": [
+        {
+            "name": "CEEDCV",
+            "email": "info@ceedcv.es",
+            "homepage": "https://ceedcv.es"
+        }
+    ]
 }
