@@ -1,6 +1,6 @@
 {
     "name": "ceedcv-maya/shared-http-laravel",
-    "description": "Reusable HTTP utilities for Laravel APIs: standardized JSON response envelope, health endpoint, app metadata controller, exception handler.",
+    "description": "Reusable HTTP utilities for Laravel APIs: standardized JSON response envelope, health endpoint, app metadata controller, exception handler, accent-fold search support.",
     "type": "library",
     "license": "MIT",
     "homepage": "https://github.com/Maya-AQSS/shared-http-laravel",
@@ -8,6 +8,28 @@
         "issues": "https://github.com/Maya-AQSS/maya_platform/issues",
         "source": "https://github.com/Maya-AQSS/shared-http-laravel"
     },
+    "repositories": [
+        {
+            "type": "package",
+            "package": {"name": "illuminate/foundation",  "version": "13.0.0", "type": "metapackage"}
+        },
+        {
+            "type": "package",
+            "package": {"name": "illuminate/http",        "version": "13.0.0", "type": "metapackage"}
+        },
+        {
+            "type": "package",
+            "package": {"name": "illuminate/routing",     "version": "13.0.0", "type": "metapackage"}
+        },
+        {
+            "type": "package",
+            "package": {"name": "illuminate/support",     "version": "13.0.0", "type": "metapackage"}
+        },
+        {
+            "type": "package",
+            "package": {"name": "illuminate/contracts",   "version": "13.0.0", "type": "metapackage"}
+        }
+    ],
     "require": {
         "php": "^8.4",
         "illuminate/foundation": "^11.0 || ^12.0 || ^13.0",
@@ -16,9 +38,30 @@
         "illuminate/support": "^11.0 || ^12.0 || ^13.0",
         "illuminate/contracts": "^11.0 || ^12.0 || ^13.0"
     },
+    "require-dev": {
+        "pestphp/pest": "^3.0",
+        "pestphp/pest-plugin-laravel": "^3.0",
+        "orchestra/testbench": "^9.0 || ^10.0",
+        "mockery/mockery": "^1.6"
+    },
     "autoload": {
         "psr-4": {
-            "Maya\\Http\\": "src/"
+            "Maya\\Http\\": "src/",
+            "Maya\\Search\\": "src/Search/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "pest --colors=always",
+        "test-coverage": "pest --coverage --min=80"
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
         }
     },
     "minimum-stability": "stable",
@@ -29,6 +72,8 @@
         "api",
         "health",
         "response",
+        "search",
+        "accent-fold",
         "ceedcv",
         "maya"
     ],
