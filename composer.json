@@ -11,23 +11,43 @@
     "repositories": [
         {
             "type": "package",
-            "package": {"name": "illuminate/foundation",  "version": "13.0.0", "type": "metapackage"}
+            "package": {
+                "name": "illuminate/foundation",
+                "version": "13.0.0",
+                "type": "metapackage"
+            }
         },
         {
             "type": "package",
-            "package": {"name": "illuminate/http",        "version": "13.0.0", "type": "metapackage"}
+            "package": {
+                "name": "illuminate/http",
+                "version": "13.0.0",
+                "type": "metapackage"
+            }
         },
         {
             "type": "package",
-            "package": {"name": "illuminate/routing",     "version": "13.0.0", "type": "metapackage"}
+            "package": {
+                "name": "illuminate/routing",
+                "version": "13.0.0",
+                "type": "metapackage"
+            }
         },
         {
             "type": "package",
-            "package": {"name": "illuminate/support",     "version": "13.0.0", "type": "metapackage"}
+            "package": {
+                "name": "illuminate/support",
+                "version": "13.0.0",
+                "type": "metapackage"
+            }
         },
         {
             "type": "package",
-            "package": {"name": "illuminate/contracts",   "version": "13.0.0", "type": "metapackage"}
+            "package": {
+                "name": "illuminate/contracts",
+                "version": "13.0.0",
+                "type": "metapackage"
+            }
         }
     ],
     "require": {
