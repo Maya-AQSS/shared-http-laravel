@@ -22,14 +22,22 @@ use Illuminate\Http\Middleware\HandleCors;
  *
  * ## What it registers (always)
  * - `HandleCors::class` prepended to the `api` middleware group.
- * - `trustProxies(at: '*')` — required behind Traefik/load-balancers (opt-out via `'trustProxies' => false`).
+ * - `trustProxies(at: ...)` — required behind Traefik/load-balancers.
+ *
+ * ## Trusted proxies resolution (in order)
+ * 1. Explicit `'trustProxies'` option (`string|array|false`).
+ * 2. Env `TRUSTED_PROXIES` (comma-separated list of IP/CIDR), e.g.
+ *    `172.29.71.0/24,10.0.0.0/8`.
+ * 3. Fallback `'*'` — convenient for dev/Compose. **In production this is
+ *    insecure**: always set `TRUSTED_PROXIES` to the Traefik CIDR (e.g.
+ *    `172.29.71.0/24`) in the ConfigMap.
  *
  * ## Options
- * | Key                 | Type       | Default | Description                                       |
- * |---------------------|------------|---------|---------------------------------------------------|
- * | `trustProxies`      | bool       | `true`  | Whether to call `trustProxies(at: '*')`.          |
- * | `trimStringsExcept` | string[]   | `[]`    | If non-empty, calls `trimStrings(except: [...])`. |
- * | `apiPrepend`        | class-string[] | `[]` | Extra middleware prepended after HandleCors.    |
+ * | Key                 | Type                          | Default | Description                                                                  |
+ * |---------------------|-------------------------------|---------|------------------------------------------------------------------------------|
+ * | `trustProxies`      | `bool\|string\|array`         | `true`  | `false` = skip; `true` = resolve from env; `string\|array` = explicit value. |
+ * | `trimStringsExcept` | `string[]`                    | `[]`    | If non-empty, calls `trimStrings(except: [...])`.                            |
+ * | `apiPrepend`        | `class-string[]`              | `[]`    | Extra middleware prepended after HandleCors.                                 |
  *
  * ## Source provenance
  * Pattern extracted from the five Maya backend `bootstrap/app.php` files:
@@ -50,19 +58,20 @@ final class CommonMiddleware
     /**
      * Register common middleware on the given configurator.
      *
-     * @param  object                $middleware  The Middleware configurator (Illuminate\Foundation\Configuration\Middleware or compatible).
-     * @param  array<string, class-string> $aliases  Alias → FQCN map for `$middleware->alias()`.
-     * @param  array<string, mixed>  $options    See class docblock for supported keys.
+     * @param  object  $middleware  The Middleware configurator (Illuminate\Foundation\Configuration\Middleware or compatible).
+     * @param  array<string, class-string>  $aliases  Alias → FQCN map for `$middleware->alias()`.
+     * @param  array<string, mixed>  $options  See class docblock for supported keys.
      */
     public static function register(object $middleware, array $aliases = [], array $options = []): void
     {
-        $trustProxies     = $options['trustProxies']     ?? true;
+        $trustProxies = $options['trustProxies'] ?? true;
         $trimStringsExcept = $options['trimStringsExcept'] ?? [];
-        $apiPrepend       = $options['apiPrepend']       ?? [];
+        $apiPrepend = $options['apiPrepend'] ?? [];
 
         // 1. Trust proxies (Traefik / load-balancers)
         if ($trustProxies !== false) {
-            $middleware->trustProxies(at: '*');
+            $at = self::resolveTrustedProxies($trustProxies);
+            $middleware->trustProxies(at: $at);
         }
 
         // 2. CORS must be first in the API group (before auth/throttle middleware)
@@ -78,5 +87,45 @@ final class CommonMiddleware
         if ($trimStringsExcept !== []) {
             $middleware->trimStrings(except: $trimStringsExcept);
         }
+    }
+
+    /**
+     * Resolve the value passed to `trustProxies(at: ...)`.
+     *
+     * @param  mixed  $option  Raw option value (`true`, string, or array).
+     * @return string|array<int, string>
+     */
+    private static function resolveTrustedProxies(mixed $option): string|array
+    {
+        if (is_string($option) && $option !== '') {
+            return $option;
+        }
+
+        if (is_array($option) && $option !== []) {
+            return array_values(array_map('strval', $option));
+        }
+
+        // Read from $_ENV first (phpdotenv may populate it without putenv,
+        // in which case getenv() alone would miss it), then process env.
+        $envValue = $_ENV['TRUSTED_PROXIES'] ?? getenv('TRUSTED_PROXIES');
+        if ($envValue !== false && trim((string) $envValue) !== '') {
+            $items = array_values(array_filter(array_map('trim', explode(',', (string) $envValue)), static fn (string $v): bool => $v !== ''));
+            if ($items !== []) {
+                return count($items) === 1 ? $items[0] : $items;
+            }
+        }
+
+        // No explicit value and no TRUSTED_PROXIES: refuse the insecure '*'
+        // fallback in production (trusting any proxy enables X-Forwarded-* spoofing).
+        $appEnv = $_ENV['APP_ENV'] ?? getenv('APP_ENV');
+        if (is_string($appEnv) && $appEnv === 'production') {
+            throw new \RuntimeException(
+                'TRUSTED_PROXIES must be set explicitly in production (e.g. the Traefik CIDR '
+                .'such as 172.29.71.0/24). Refusing to trust all proxies ("*").'
+            );
+        }
+
+        // Insecure fallback for dev/Compose only.
+        return '*';
     }
 }
